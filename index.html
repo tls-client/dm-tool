@@ -9,7 +9,7 @@
 </head>
 <body>
     <h1>Discord Mass Group</h1>  
-    <form id="groupForm">
+    <form id="groupForm" onsubmit="return false;">
         <label for="token">Token:</label>
         <input type="text" id="token" name="token" required>
         <button type="button" onclick="copyToClipboard('token')">コピー</button>
