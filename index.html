@@ -2,39 +2,48 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discord Mass DM</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Discord Mass Group</h1>
-
     <form id="groupForm">
         <label for="token">Token:</label>
         <input type="text" id="token" name="token" required>
-        <button type="button" onclick="copyToClipboard('token')">Tokenをコピー</button>
+        <button type="button" onclick="copyToClipboard('token')">コピー</button>
 
         <label for="groupId">グループID:</label>
-        <textarea id="groupId" name="groupId" rows="5" readonly></textarea>
-        <button type="button" onclick="copyToClipboard('groupId')">グループIDをコピー</button>
+        <textarea id="groupId" name="groupId" rows="10"></textarea>
+        <button type="button" onclick="copyToClipboard('groupId')">コピー</button>
 
         <label for="userIds">ユーザーID:</label>
-        <textarea id="userIds" name="userIds" rows="5"></textarea>
-        <button type="button" onclick="copyToClipboard('userIds')">ユーザーIDをコピー</button>
+        <textarea id="userIds" name="userIds" rows="10"></textarea>
+        <button type="button" onclick="copyToClipboard('userIds')">コピー</button>
 
         <label for="message">送信メッセージ:</label>
         <input type="text" id="message" name="message">
+        
+        <label for="delay">メッセージ送信の遅延 (秒):</label>
+        <input type="number" id="delay" name="delay" value="1" min="0.1" step="0.1">
 
-        <label for="delay">メッセージ送信の遅延(ms):</label>
-        <input type="number" id="delay" name="delay" value="1000" min="0.1" step="0.1">
+        <label for="baseNames">グループ名 (変更):</label>
+        <input type="text" id="baseNames" name="baseNames">
 
+        <label for="iconUrl">アイコン画像URL:</label>
+        <input type="text" id="iconUrl" name="iconUrl">
+
+        <button type="button" onclick="createGroups()">グループ作成 (レートリミット10回/10分)</button>        
+        <button type="button" onclick="sendMessage()">メッセージ送信</button>
+        <button type="button" onclick="addUsers()">ユーザー追加 (レートリミット10回/120秒)</button>
         <label for="startDelay">ユーザー追加開始までの時間 (分後):</label>
         <input type="number" id="startDelay" name="startDelay" value="0" min="0">
-
-        <button type="button" onclick="createGroups()">グループ作成</button>
-        <button type="button" onclick="sendMessage()">メッセージ送信</button>
-        <button type="button" onclick="addUsers()">ユーザー追加</button>
+        
+        <button type="button" onclick="changeGroupNames()">グループ名変更</button>
+        <button type="button" onclick="changeGroupIcons()">グループアイコン変更</button>
     </form>
 
     <p id="status">ステータス: 準備完了</p>
+
+    <script src="script.js"></script>
 </body>
 </html>
