@@ -1,6 +1,5 @@
 let isCreatingGroups = false; // グループ作成中かどうかのフラグ
-let isAddingUsers = false;    // ユーザー追加中かどうかのフラグ
-let groupsCreated = false;    // グループ作成が完了したかどうかのフラグ
+let isAddingUsers = false;   // ユーザー追加中かどうかのフラグ
 
 // ボタンの状態を切り替える関数
 function toggleButtons(disable) {
@@ -57,22 +56,17 @@ async function createGroups() {
       }
     } catch (error) {
       document.getElementById("status").innerText = "ステータス: 通信エラーが発生しました";
-      console.error("通信エラーが発生しました:", error);
     }
   }
 
   document.getElementById("status").innerText += " 10個のグループが作成されました。";
-  groupsCreated = true;
+  await new Promise((resolve) => setTimeout(resolve, 600000)); // 10分待機
   isCreatingGroups = false;
+  createGroups(); // 再度グループ作成を実行
 }
 
-// ユーザーをグループに追加する非同期関数
+// ユーザーを追加する非同期関数
 async function addUsers() {
-  if (!groupsCreated) {
-    document.getElementById("status").innerText = "先にグループ作成してください";
-    return;
-  }
-
   if (isAddingUsers) {
     document.getElementById("status").innerText = "ステータス: ユーザー追加処理が既に実行中です";
     return;
@@ -80,8 +74,9 @@ async function addUsers() {
   isAddingUsers = true;
 
   const token = document.getElementById("token").value;
-  const groupIds = document.getElementById("groupId").value.split("\n").filter(id => id.trim() !== "");
-  const userIds = document.getElementById("userIds").value.split("\n").filter(id => id.trim() !== "");
+  const groupId = document.getElementById("groupId").value.trim().split("\n")[0]; // 最初のグループIDを使用
+  const userIds = document.getElementById("userIds").value.trim().split("\n");
+
   const headers = {
     "Authorization": token,
     "Content-Type": "application/json"
@@ -89,43 +84,60 @@ async function addUsers() {
 
   document.getElementById("status").innerText = "ステータス: ユーザー追加中...";
 
-  // グループIDとユーザーIDが正しいか確認
-  console.log("グループID: ", groupIds);
-  console.log("ユーザーID: ", userIds);
+  for (const userId of userIds) {
+    try {
+      const response = await fetch(`https://discord.com/api/v9/channels/${groupId}/recipients/${userId}`, {
+        method: "PUT",
+        headers: headers
+      });
 
-  for (const groupId of groupIds) {
-    for (const userId of userIds) {
-      try {
-        const response = await fetch(`https://discord.com/api/v9/channels/${groupId}/recipients/${userId}`, {
-          method: "PUT",
-          headers: headers
-        });
-
-        if (response.ok) {
-          document.getElementById("status").innerText = `ステータス: ユーザー ${userId} がグループ ${groupId} に追加されました`;
-        } else {
-          const errorData = await response.json();
-          document.getElementById("status").innerText = `エラーが発生しました: ${errorData.message}`;
-        }
-      } catch (error) {
-        document.getElementById("status").innerText = "ステータス: 通信エラーが発生しました";
-        console.error("通信エラーが発生しました:", error);
+      if (response.ok) {
+        document.getElementById("status").innerText = `ステータス: ユーザー ${userId} が追加されました`;
+      } else {
+        const errorData = await response.json();
+        document.getElementById("status").innerText = `エラーが発生しました: ${errorData.message}`;
       }
+    } catch (error) {
+      document.getElementById("status").innerText = "ステータス: 通信エラーが発生しました";
     }
   }
 
-  document.getElementById("status").innerText = "ユーザー追加が完了しました。";
   isAddingUsers = false;
 }
 
-// メッセージ送信の処理もグループ作成前に呼ばれた場合にエラーメッセージを表示
+// メッセージを送信する非同期関数
 async function sendMessage() {
-  if (!groupsCreated) {
-    document.getElementById("status").innerText = "先にグループ作成してください";
-    return;
+  const token = document.getElementById("token").value;
+  const groupId = document.getElementById("groupId").value.trim().split("\n")[0]; // 最初のグループIDを使用
+  const message = document.getElementById("message").value;
+  const delay = parseFloat(document.getElementById("delay").value);
+
+  const headers = {
+    "Authorization": token,
+    "Content-Type": "application/json"
+  };
+
+  document.getElementById("status").innerText = "ステータス: メッセージ送信中...";
+
+  try {
+    const response = await fetch(`https://discord.com/api/v9/channels/${groupId}/messages`, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify({ content: message })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      document.getElementById("status").innerText = `ステータス: メッセージ送信成功！ID: ${data.id}`;
+    } else {
+      const errorData = await response.json();
+      document.getElementById("status").innerText = `エラーが発生しました: ${errorData.message}`;
+    }
+  } catch (error) {
+    document.getElementById("status").innerText = "ステータス: 通信エラーが発生しました";
   }
 
-  // メッセージ送信処理のコードをここに追加
-  document.getElementById("status").innerText = "メッセージ送信中...";
-  // ここで実際のメッセージ送信のAPIを呼び出すコードを追加
+  if (delay > 0) {
+    await new Promise(resolve => setTimeout(resolve, delay)); // 遅延を適用
+  }
 }
