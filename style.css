@@ -1,64 +1,142 @@
+
+Navigation Menu
+
+Code
+Issues
+Pull requests
+Actions
+Commit 79fef1c
+Preview
+Give feedback
+tls-client
+tls-client
+authored
+3 hours ago
+·
+·
+Verified
+Update style.css
+main
+1 parent 
+5cdda27
+ commit 
+79fef1c
+1 file changed
+Search within code
+ 
+‎style.css
++92
+-21
+Original file line number	Diff line number	Diff line change
+@@ -1,30 +1,101 @@
 body {
     font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #e0e0e0;
     margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
+    padding: 20px;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
+    justify-content: flex-start;  
+    align-items: flex-start;      
+    flex-direction: column;       
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+  color: #333;
 }
-
 h1 {
-    font-size: 1.5rem;
-    color: #333;
-    margin-bottom: 20px;
+  text-align: center;
+  margin-top: 20px;
+  font-size: 2rem;
+  color: #333;
 }
 
 form {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 90%;
+    display: flex;
+    flex-direction: column;
     max-width: 400px;
+    background-color: #1e1e1e;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin: 10px;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 label {
-    display: block;
-    font-size: 1rem;
-    color: #333;
     margin-top: 10px;
+    color: #f0f0f0;
+  font-size: 1rem;
+  margin-bottom: 5px;
 }
-
-input, textarea, button {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
+input, textarea {
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
 }
-
-textarea {
-    resize: vertical;
-}
-
 button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
-    margin-top: 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
-
+button:hover {
+  background-color: #45a049;
+}
 button:disabled {
-    background-color: gray;
-    cursor: not-allowed;
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 
+input, button, textarea {
+    margin-top: 5px;
+    padding:
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
 #status {
+  text-align: center;
+  font-size: 1rem;
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #e7e7e7;
+  border-radius: 4px;
+  width: 90%;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (max-width: 600px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+  form {
+    padding: 15px;
+  }
+  input, textarea, button {
     font-size: 1rem;
-    color: #333;
-    margin-top: 20px;
+  }
+  button {
+    padding: 10px;
+  }
+  #status {
+    font-size: 0.9rem;
+  }
 }
