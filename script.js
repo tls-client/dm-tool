@@ -57,11 +57,12 @@ async function createGroups() {
       }
     } catch (error) {
       document.getElementById("status").innerText = "ステータス: 通信エラーが発生しました";
+      console.error("通信エラーが発生しました:", error);
     }
   }
 
   document.getElementById("status").innerText += " 10個のグループが作成されました。";
-  groupsCreated = true;  // グループ作成が完了したことを示すフラグを立てる
+  groupsCreated = true;
   isCreatingGroups = false;
 }
 
@@ -71,7 +72,7 @@ async function addUsers() {
     document.getElementById("status").innerText = "先にグループ作成してください";
     return;
   }
-  
+
   if (isAddingUsers) {
     document.getElementById("status").innerText = "ステータス: ユーザー追加処理が既に実行中です";
     return;
@@ -79,14 +80,18 @@ async function addUsers() {
   isAddingUsers = true;
 
   const token = document.getElementById("token").value;
-  const groupIds = document.getElementById("groupId").value.split("\n");
-  const userIds = document.getElementById("userIds").value.split("\n");
+  const groupIds = document.getElementById("groupId").value.split("\n").filter(id => id.trim() !== "");
+  const userIds = document.getElementById("userIds").value.split("\n").filter(id => id.trim() !== "");
   const headers = {
     "Authorization": token,
     "Content-Type": "application/json"
   };
 
   document.getElementById("status").innerText = "ステータス: ユーザー追加中...";
+
+  // グループIDとユーザーIDが正しいか確認
+  console.log("グループID: ", groupIds);
+  console.log("ユーザーID: ", userIds);
 
   for (const groupId of groupIds) {
     for (const userId of userIds) {
@@ -104,6 +109,7 @@ async function addUsers() {
         }
       } catch (error) {
         document.getElementById("status").innerText = "ステータス: 通信エラーが発生しました";
+        console.error("通信エラーが発生しました:", error);
       }
     }
   }
@@ -118,7 +124,7 @@ async function sendMessage() {
     document.getElementById("status").innerText = "先にグループ作成してください";
     return;
   }
-  
+
   // メッセージ送信処理のコードをここに追加
   document.getElementById("status").innerText = "メッセージ送信中...";
   // ここで実際のメッセージ送信のAPIを呼び出すコードを追加
