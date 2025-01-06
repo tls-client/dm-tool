@@ -1,5 +1,5 @@
 let isCreatingGroups = false; // グループ作成中かどうかのフラグ
-let isAddingUsers = false;   // ユーザー追加中かどうかのフラグ
+let isAddingUsers = false;    // ユーザー追加中かどうかのフラグ
 
 // ボタンの状態を切り替える関数
 function toggleButtons(disable) {
@@ -63,4 +63,39 @@ async function createGroups() {
   await new Promise((resolve) => setTimeout(resolve, 600000)); // 10分待機
   isCreatingGroups = false;
   createGroups(); // 再度グループ作成を実行
+}
+
+// ユーザーをグループに追加する非同期関数
+async function addUserToGroup(groupId, userId) {
+  if (isAddingUsers) {
+    document.getElementById("status").innerText = "ステータス: ユーザー追加処理が既に実行中です";
+    return;
+  }
+  isAddingUsers = true;
+
+  const token = document.getElementById("token").value;
+  const headers = {
+    "Authorization": token,
+    "Content-Type": "application/json"
+  };
+
+  document.getElementById("status").innerText = "ステータス: ユーザー追加中...";
+
+  try {
+    const response = await fetch(`https://discord.com/api/v9/channels/${groupId}/recipients/${userId}`, {
+      method: "PUT",
+      headers: headers
+    });
+
+    if (response.ok) {
+      document.getElementById("status").innerText = `ステータス: ユーザー追加完了！`;
+    } else {
+      const errorData = await response.json();
+      document.getElementById("status").innerText = `エラーが発生しました: ${errorData.message}`;
+    }
+  } catch (error) {
+    document.getElementById("status").innerText = "ステータス: 通信エラーが発生しました";
+  }
+
+  isAddingUsers = false;
 }
