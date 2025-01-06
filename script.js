@@ -1,5 +1,6 @@
 let isCreatingGroups = false; // グループ作成中かどうかのフラグ
 let isAddingUsers = false;    // ユーザー追加中かどうかのフラグ
+let groupsCreated = false;    // グループ作成が完了したかどうかのフラグ
 
 // ボタンの状態を切り替える関数
 function toggleButtons(disable) {
@@ -60,13 +61,17 @@ async function createGroups() {
   }
 
   document.getElementById("status").innerText += " 10個のグループが作成されました。";
-  await new Promise((resolve) => setTimeout(resolve, 600000)); // 10分待機
+  groupsCreated = true;  // グループ作成が完了したことを示すフラグを立てる
   isCreatingGroups = false;
-  createGroups(); // 再度グループ作成を実行
 }
 
 // ユーザーをグループに追加する非同期関数
 async function addUsers() {
+  if (!groupsCreated) {
+    document.getElementById("status").innerText = "先にグループ作成してください";
+    return;
+  }
+  
   if (isAddingUsers) {
     document.getElementById("status").innerText = "ステータス: ユーザー追加処理が既に実行中です";
     return;
@@ -105,4 +110,16 @@ async function addUsers() {
 
   document.getElementById("status").innerText = "ユーザー追加が完了しました。";
   isAddingUsers = false;
+}
+
+// メッセージ送信の処理もグループ作成前に呼ばれた場合にエラーメッセージを表示
+async function sendMessage() {
+  if (!groupsCreated) {
+    document.getElementById("status").innerText = "先にグループ作成してください";
+    return;
+  }
+  
+  // メッセージ送信処理のコードをここに追加
+  document.getElementById("status").innerText = "メッセージ送信中...";
+  // ここで実際のメッセージ送信のAPIを呼び出すコードを追加
 }
