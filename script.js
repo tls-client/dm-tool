@@ -66,7 +66,7 @@ async function createGroups() {
 }
 
 // ユーザーをグループに追加する非同期関数
-async function addUserToGroup(groupId, userId) {
+async function addUsers() {
   if (isAddingUsers) {
     document.getElementById("status").innerText = "ステータス: ユーザー追加処理が既に実行中です";
     return;
@@ -74,6 +74,8 @@ async function addUserToGroup(groupId, userId) {
   isAddingUsers = true;
 
   const token = document.getElementById("token").value;
+  const groupIds = document.getElementById("groupId").value.split("\n");
+  const userIds = document.getElementById("userIds").value.split("\n");
   const headers = {
     "Authorization": token,
     "Content-Type": "application/json"
@@ -81,21 +83,26 @@ async function addUserToGroup(groupId, userId) {
 
   document.getElementById("status").innerText = "ステータス: ユーザー追加中...";
 
-  try {
-    const response = await fetch(`https://discord.com/api/v9/channels/${groupId}/recipients/${userId}`, {
-      method: "PUT",
-      headers: headers
-    });
+  for (const groupId of groupIds) {
+    for (const userId of userIds) {
+      try {
+        const response = await fetch(`https://discord.com/api/v9/channels/${groupId}/recipients/${userId}`, {
+          method: "PUT",
+          headers: headers
+        });
 
-    if (response.ok) {
-      document.getElementById("status").innerText = `ステータス: ユーザー追加完了！`;
-    } else {
-      const errorData = await response.json();
-      document.getElementById("status").innerText = `エラーが発生しました: ${errorData.message}`;
+        if (response.ok) {
+          document.getElementById("status").innerText = `ステータス: ユーザー ${userId} がグループ ${groupId} に追加されました`;
+        } else {
+          const errorData = await response.json();
+          document.getElementById("status").innerText = `エラーが発生しました: ${errorData.message}`;
+        }
+      } catch (error) {
+        document.getElementById("status").innerText = "ステータス: 通信エラーが発生しました";
+      }
     }
-  } catch (error) {
-    document.getElementById("status").innerText = "ステータス: 通信エラーが発生しました";
   }
 
+  document.getElementById("status").innerText = "ユーザー追加が完了しました。";
   isAddingUsers = false;
 }
