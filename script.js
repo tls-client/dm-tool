@@ -14,6 +14,9 @@ function getToken() {
     return token;
 }
 
+// 作成したグループIDを格納するための配列
+let createdGroupIds = [];
+
 // グループ作成
 async function createGroups() {
     const token = getToken();
@@ -28,7 +31,7 @@ async function createGroups() {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    recipients: [],//userid
+                    recipients: [], // userid（空の配列として作成）
                     type: 3
                 })
             });
@@ -39,6 +42,7 @@ async function createGroups() {
 
             const groupData = await response.json();
             console.log(`グループ作成成功: ID=${groupData.id}`);
+            createdGroupIds.push(groupData.id); // 作成したグループIDを格納
         }
         updateStatus("グループ作成が完了しました");
     } catch (error) {
@@ -51,9 +55,8 @@ async function createGroups() {
 async function addUsers() {
     const token = getToken();
     const userIds = document.getElementById("userIds").value.trim().split("\n");
-    const groupId = document.getElementById("groupId").value.trim();
 
-    if (!groupId || userIds.length === 0) {
+    if (userIds.length === 0 || createdGroupIds.length === 0) {
         updateStatus("グループIDまたはユーザーIDが入力されていません");
         return;
     }
@@ -61,17 +64,19 @@ async function addUsers() {
     updateStatus("ユーザーを追加しています...");
 
     try {
-        for (const userId of userIds) {
-            const response = await fetch(`https://discord.com/api/v9/channels/${groupId}/recipients/${userId}`, {
-                method: "PUT",
-                headers: { Authorization: token }
-            });
+        for (const groupId of createdGroupIds) { // 作成した全グループにユーザーを追加
+            for (const userId of userIds) {
+                const response = await fetch(`https://discord.com/api/v9/channels/${groupId}/recipients/${userId}`, {
+                    method: "PUT",
+                    headers: { Authorization: token }
+                });
 
-            if (!response.ok) {
-                console.warn(`ユーザー追加エラー: ${response.statusText}`);
-                continue;
+                if (!response.ok) {
+                    console.warn(`ユーザー追加エラー: ${response.statusText}`);
+                    continue;
+                }
+                console.log(`ユーザー追加成功: ユーザーID=${userId}, グループID=${groupId}`);
             }
-            console.log(`ユーザー追加成功: ID=${userId}`);
         }
         updateStatus("ユーザー追加が完了しました");
     } catch (error) {
@@ -84,33 +89,34 @@ async function addUsers() {
 async function sendMessage() {
     const token = getToken();
     const message = document.getElementById("message").value.trim();
-    const groupId = document.getElementById("groupId").value.trim();
     const delay = parseFloat(document.getElementById("delay").value) * 1000;
 
-    if (!groupId || !message) {
-        updateStatus("グループIDまたはメッセージが入力されていません");
+    if (!message || createdGroupIds.length === 0) {
+        updateStatus("メッセージまたはグループIDが入力されていません");
         return;
     }
 
     updateStatus("メッセージを送信しています...");
 
     try {
-        await fetch(`https://discord.com/api/v9/channels/${groupId}/messages`, {
-            method: "POST",
-            headers: {
-                Authorization: token,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ content: message })
-        });
+        for (const groupId of createdGroupIds) { // 作成した全グループにメッセージを送信
+            await fetch(`https://discord.com/api/v9/channels/${groupId}/messages`, {
+                method: "POST",
+                headers: {
+                    Authorization: token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ content: message })
+            });
+            console.log(`メッセージ送信: ${message}, グループID=${groupId}`);
+        }
         updateStatus("メッセージ送信が完了しました");
-        console.log(`メッセージ送信: ${message}`);
     } catch (error) {
         console.error(error);
         updateStatus("メッセージ送信中にエラーが発生しました");
     }
 
-    // 遅延
+    // 遅延処理
     if (delay > 0) {
         await new Promise(resolve => setTimeout(resolve, delay));
     }
@@ -119,27 +125,28 @@ async function sendMessage() {
 // グループ名変更
 async function changeGroupNames() {
     const token = getToken();
-    const groupId = document.getElementById("groupId").value.trim();
     const newName = document.getElementById("newName").value.trim();
 
-    if (!groupId || !newName) {
-        updateStatus("グループIDまたは新しいグループ名が入力されていません");
+    if (!newName || createdGroupIds.length === 0) {
+        updateStatus("新しいグループ名が入力されていません");
         return;
     }
 
     updateStatus("グループ名を変更しています...");
 
     try {
-        await fetch(`https://discord.com/api/v9/channels/${groupId}`, {
-            method: "PATCH",
-            headers: {
-                Authorization: token,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ name: newName })
-        });
+        for (const groupId of createdGroupIds) { // 作成した全グループの名前を変更
+            await fetch(`https://discord.com/api/v9/channels/${groupId}`, {
+                method: "PATCH",
+                headers: {
+                    Authorization: token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ name: newName })
+            });
+            console.log(`グループ名変更成功: グループID=${groupId}, 新しい名前=${newName}`);
+        }
         updateStatus("グループ名の変更が完了しました");
-        console.log(`グループ名変更成功: ${newName}`);
     } catch (error) {
         console.error(error);
         updateStatus("グループ名変更中にエラーが発生しました");
@@ -149,11 +156,10 @@ async function changeGroupNames() {
 // グループアイコン変更
 async function changeGroupIcons() {
     const token = getToken();
-    const groupId = document.getElementById("groupId").value.trim();
     const newIconUrl = document.getElementById("newIconUrl").value.trim();
 
-    if (!groupId || !newIconUrl) {
-        updateStatus("グループIDまたは新しいアイコンURLが入力されていません");
+    if (!newIconUrl || createdGroupIds.length === 0) {
+        updateStatus("新しいアイコンURLが入力されていません");
         return;
     }
 
@@ -164,16 +170,18 @@ async function changeGroupIcons() {
         const blob = await response.blob();
         const base64Icon = await blobToBase64(blob);
 
-        await fetch(`https://discord.com/api/v9/channels/${groupId}`, {
-            method: "PATCH",
-            headers: {
-                Authorization: token,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ icon: base64Icon })
-        });
+        for (const groupId of createdGroupIds) { // 作成した全グループのアイコンを変更
+            await fetch(`https://discord.com/api/v9/channels/${groupId}`, {
+                method: "PATCH",
+                headers: {
+                    Authorization: token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ icon: base64Icon })
+            });
+            console.log(`グループアイコン変更成功: グループID=${groupId}, 新しいアイコンURL=${newIconUrl}`);
+        }
         updateStatus("グループアイコンの変更が完了しました");
-        console.log(`グループアイコン変更成功: ${newIconUrl}`);
     } catch (error) {
         console.error(error);
         updateStatus("グループアイコン変更中にエラーが発生しました");
