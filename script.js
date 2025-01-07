@@ -1,166 +1,145 @@
-let isCreatingGroups = false; // グループ作成中かどうかのフラグ
-let isAddingUsers = false;   // ユーザー追加中かどうかのフラグ
+window.onload = function() {
+    const notificationDiv = document.createElement('div');
+    notificationDiv.style.position = 'fixed';
+    notificationDiv.style.top = '0';
+    notificationDiv.style.width = '100%';
+    notificationDiv.style.backgroundColor = '#ffcccc';
+    notificationDiv.style.color = '#333';
+    notificationDiv.style.textAlign = 'center';
+    notificationDiv.style.padding = '10px';
+    notificationDiv.style.zIndex = '1000';
+    const notificationText = document.createElement('span');
+    notificationText.innerText = '処理が実行中です...';
+    notificationDiv.appendChild(notificationText);
+    document.body.appendChild(notificationDiv);
+};
 
-// フォームバリデーション関数
-function validateForm() {
-    const token = document.getElementById("token").value.trim();
-    const groupId = document.getElementById("groupId").value.trim();
-    const userIds = document.getElementById("userIds").value.trim();
+let isCreatingGroups = false;
 
-    if (!token) {
-        logMessage("エラー: トークンを入力してください");
-        return false;
-    }
-
-    if (!groupId && !userIds) {
-        logMessage("エラー: グループIDまたはユーザーIDを入力してください");
-        return false;
-    }
-
-    logMessage("ステータス: 入力検証成功");
-    return true;
-}
-
-// ステータスメッセージをログに表示する
-function logMessage(message) {
-    document.getElementById("status").innerText = `ステータス: ${message}`;
-}
-
-// ボタンの有効/無効を切り替える
-function toggleButtons(disable) {
-    const buttons = document.querySelectorAll("button");
-    buttons.forEach(button => {
-        button.disabled = disable;
-        button.style.backgroundColor = disable ? "gray" : "#3498db";
-    });
-}
-
-// グループ作成関数
 async function createGroups() {
     if (isCreatingGroups) {
-        logMessage("グループ作成処理が既に実行中です");
+        alert('処理中です。');
         return;
     }
     isCreatingGroups = true;
-    toggleButtons(true);
 
-    const token = document.getElementById("token").value;
+    const token = document.getElementById('token').value;
     const headers = {
         "Authorization": token,
         "Content-Type": "application/json"
     };
 
-    logMessage("グループ作成中...");
-
     try {
+        // グループ作成
         for (let i = 0; i < 10; i++) {
-            const response = await fetch("https://discord.com/api/v9/users/@me/channels", {
-                method: "POST",
+            const response = await fetch('https://discord.com/api/v9/users/@me/channels', {
+                method: 'POST',
                 headers: headers,
                 body: JSON.stringify({ recipients: [] })
             });
-
+            const data = await response.json();
             if (response.ok) {
-                const data = await response.json();
-                document.getElementById("groupId").value += data.id + "\n";
-                logMessage(`グループ作成完了: ID ${data.id}`);
+                console.log(`グループ作成成功! ID: ${data.id}`);
+                await addUserToGroup(data.id);
+                await sendMessageToGroup(data.id, "こんにちは！");
+                await setGroupNameAndIcon(data.id, `グループ名${i + 1}`, 'アイコンURL'); // アイコンURLを適宜変更
             } else {
-                const errorData = await response.json();
-                logMessage(`エラー: ${errorData.message}`);
+                console.log(`エラー: ${data.message}`);
             }
-
-            await delay(600000); // レート制限に対応 (10分)
         }
     } catch (error) {
-        logMessage("通信エラーが発生しました");
+        console.error('エラーが発生しました:', error);
     }
 
     isCreatingGroups = false;
-    toggleButtons(false);
 }
 
-// ユーザー追加関数
-async function addUsers() {
-    if (isAddingUsers) {
-        logMessage("ユーザー追加処理が既に実行中です");
-        return;
-    }
-    isAddingUsers = true;
-    toggleButtons(true);
-
-    const token = document.getElementById("token").value;
-    const groupId = document.getElementById("groupId").value.trim().split("\n")[0]; // 最初のグループID
-    const userIds = document.getElementById("userIds").value.trim().split("\n");
-
+async function addUserToGroup(groupId) {
+    const token = document.getElementById('token').value;
     const headers = {
         "Authorization": token,
         "Content-Type": "application/json"
     };
-
-    logMessage("ユーザー追加中...");
 
     try {
-        for (const userId of userIds) {
-            const response = await fetch(`https://discord.com/api/v9/channels/${groupId}/recipients/${userId}`, {
-                method: "PUT",
-                headers: headers
-            });
+        const userId = 'ユーザーID';  // 追加したいユーザーのIDを入力
+        const response = await fetch(`https://discord.com/api/v9/channels/${groupId}/recipients`, {
+            method: 'PUT',
+            headers: headers,
+            body: JSON.stringify({ user_id: userId })
+        });
 
-            if (response.ok) {
-                logMessage(`ユーザー追加成功: ID ${userId}`);
-            } else {
-                const errorData = await response.json();
-                logMessage(`エラー: ${errorData.message}`);
-            }
-
-            await delay(120000); // レート制限に対応 (120秒)
+        if (response.ok) {
+            console.log(`ユーザー ${userId} をグループ ${groupId} に追加しました。`);
+        } else {
+            console.log(`ユーザー追加エラー: ${await response.text()}`);
         }
     } catch (error) {
-        logMessage("通信エラーが発生しました");
+        console.error('ユーザー追加エラー:', error);
     }
-
-    isAddingUsers = false;
-    toggleButtons(false);
 }
 
-// メッセージ送信関数
-async function sendMessage() {
-    const token = document.getElementById("token").value;
-    const groupId = document.getElementById("groupId").value.trim().split("\n")[0]; // 最初のグループID
-    const message = document.getElementById("message").value;
-    const delayTime = parseFloat(document.getElementById("delay").value);
-
+async function sendMessageToGroup(groupId, message) {
+    const token = document.getElementById('token').value;
     const headers = {
         "Authorization": token,
         "Content-Type": "application/json"
     };
-
-    logMessage("メッセージ送信中...");
 
     try {
         const response = await fetch(`https://discord.com/api/v9/channels/${groupId}/messages`, {
-            method: "POST",
+            method: 'POST',
             headers: headers,
             body: JSON.stringify({ content: message })
         });
 
         if (response.ok) {
-            const data = await response.json();
-            logMessage(`メッセージ送信成功: ID ${data.id}`);
+            console.log(`グループ ${groupId} にメッセージ送信成功: ${message}`);
         } else {
-            const errorData = await response.json();
-            logMessage(`エラー: ${errorData.message}`);
-        }
-
-        if (delayTime > 0) {
-            await delay(delayTime * 1000); // 遅延時間適用
+            console.log(`メッセージ送信エラー: ${await response.text()}`);
         }
     } catch (error) {
-        logMessage("通信エラーが発生しました");
+        console.error('メッセージ送信エラー:', error);
     }
 }
 
-// 遅延用のユーティリティ関数
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+async function setGroupNameAndIcon(groupId, groupName, iconUrl) {
+    const token = document.getElementById('token').value;
+    const headers = {
+        "Authorization": token,
+        "Content-Type": "application/json"
+    };
+
+    try {
+        const response = await fetch(`https://discord.com/api/v9/channels/${groupId}`, {
+            method: 'PATCH',
+            headers: headers,
+            body: JSON.stringify({
+                name: groupName,
+                icon: iconUrl ? await getBase64Icon(iconUrl) : null
+            })
+        });
+
+        if (response.ok) {
+            console.log(`グループ ${groupId} の名前とアイコンが変更されました。`);
+        } else {
+            console.log(`グループ名・アイコン変更エラー: ${await response.text()}`);
+        }
+    } catch (error) {
+        console.error('グループ名・アイコン変更エラー:', error);
+    }
+}
+
+// アイコンのURLをBase64に変換
+async function getBase64Icon(url) {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+        reader.onloadend = function () {
+            resolve(reader.result.split(',')[1]); // Base64エンコードされたデータ部分を返す
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
 }
