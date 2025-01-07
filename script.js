@@ -27,11 +27,14 @@ async function createGroups() {
                     Authorization: token,
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ type: 3 }) // グループ作成
+                body: JSON.stringify({
+                    recipients: [],//userid
+                    type: 3
+                })
             });
 
             if (!response.ok) {
-                throw new Error(`グループ作成エラー: ${response.statusText}`);
+                throw new Error(`グループ作成エラー: ${response.status} - ${response.statusText}`);
             }
 
             const groupData = await response.json();
